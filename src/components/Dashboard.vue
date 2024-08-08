@@ -24,6 +24,7 @@
       </div>
     </div>
   </nav>
+  <div class=flex>
   <div class="h-screen w-64 bg-gray-800 text-white p-4">
     <div class="text-2xl font-bold mb-4">Settings</div>
     <form @submit.prevent="saveSettings">
@@ -85,6 +86,30 @@
       </div>
     </div>
   </div>
+    <div class="p-2 w-full text-center">
+    <h1 class="text-2xl font-bold mb-4">Table Order</h1>
+    <table class="min-w-full bg-white border border-gray-200">
+      <thead>
+        <tr class="w-full bg-gray-100 text-gray-700">
+          <th class="py-2 px-4 border-b">ID</th>
+          <th class="py-2 px-4 border-b">Number</th>
+          <th class="py-2 px-4 border-b">Service</th>
+          <th class="py-2 px-4 border-b">Message</th>
+          <th class="py-2 px-4 border-b">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="item in data" :key="item.id" class="hover:bg-gray-50">
+          <td class="py-2 px-4 border-b">11</td>
+          <td class="py-2 px-4 border-b">11</td>
+          <td class="py-2 px-4 border-b">11</td>
+          <td class="py-2 px-4 border-b">11</td>
+          <td class="py-2 px-4 border-b">11</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  </div>
 </template>
 
 <script setup>
@@ -138,6 +163,25 @@ onMounted(async () => {
       throw new Error("No API key found");
     }
 
+    const response = await fetch(
+      `/api/stubs/handler_api.php?api_key=${apiKey}&action=getBalance`,
+      {
+        method: "GET",
+      }
+    ).then((res) => res.text());
+
+    if (response.includes("ACCESS_BALANCE")) {
+      data.value = response;
+    } else {
+      router.push("/");
+    }
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    loading.value = false;
+  }
+
+  try {
     const response = await fetch(
       `/api/stubs/handler_api.php?api_key=${apiKey}&action=getBalance`,
       {
