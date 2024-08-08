@@ -85,9 +85,26 @@
         </button>
       </div>
     </div>
+    <div
+      v-if="validateOrder"
+      class="fixed inset-0 flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+        <p class="text-lg font-semibold text-gray-900">{{error}}</p>
+        <button
+          @click="closePopup"
+          class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          Close
+        </button>
+      </div>
+    </div>
   </div>
     <div class="p-2 w-full text-center">
-    <h1 class="text-2xl font-bold mb-4">Table Order</h1>
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold mb-4">Table Order</h1>
+      <button @click="buyNumber" class="px-6 py-1 rounded-sm bg-green-400" type="button">Buy</button>
+    </div>
     <table class="min-w-full bg-white border border-gray-200">
       <thead>
         <tr class="w-full bg-gray-100 text-gray-700">
@@ -99,12 +116,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in data" :key="item.id" class="hover:bg-gray-50">
-          <td class="py-2 px-4 border-b">11</td>
-          <td class="py-2 px-4 border-b">11</td>
-          <td class="py-2 px-4 border-b">11</td>
-          <td class="py-2 px-4 border-b">11</td>
-          <td class="py-2 px-4 border-b">11</td>
+        <tr  v-for="(product, index) in dataOrder" :key="index"class="hover:bg-gray-50">
+          <td class="py-2 px-4 border-b">{{product}}</td>
+          <td class="py-2 px-4 border-b">{{product}}</td>
+          <td class="py-2 px-4 border-b">{{product}}</td>
+          <td class="py-2 px-4 border-b">{{product}}</td>
+          <td class="py-2 px-4 border-b">Proses</td>
         </tr>
       </tbody>
     </table>
@@ -121,8 +138,11 @@ const loading = ref(true);
 const router = useRouter();
 const country = ref(null);
 const service = ref(null);
-const provider = ref(null);
+const provider = ref('any');
 const showPopup = ref(false);
+const listOrder = ref([])
+const dataOrder = ref([])
+const validateOrder = ref(false)
 const logout = () => {
   // Hapus item dari localStorage
   localStorage.removeItem("api_key");
@@ -132,6 +152,7 @@ const logout = () => {
 };
 const closePopup = () => {
   showPopup.value = false;
+  validateOrder.value = false;
 };
 const saveSettings = () => {
   try {
@@ -144,6 +165,8 @@ const saveSettings = () => {
     showPopup.value = true;
   }
 };
+
+
 const reset = () => {
   try {
     localStorage.removeItem("country");
@@ -155,8 +178,8 @@ const reset = () => {
     showPopup.value = true;
   }
 };
-onMounted(async () => {
-  try {
+const balance = async () => {
+    try {
     const apiKey = localStorage.getItem("api_key");
     if (!apiKey) {
       router.push("/");
@@ -180,24 +203,69 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+}
+const statusId = async () => {
+  try {    
+    console.log(dataOrder.value[0])
+      const getStatus = await fetch(
+      `/api/stubs/handler_api.php?api_key=${apiKey}&action=getStatus&id=${dataOrder.value[0].id}`,
+        {
+          method: "GET",
+        }
+      ).then((res) => res.text());
+      const dataNumber = {
+        "id": dataOrder.value[0].id,
+        "number": dataOrder.value[0].number,
+        "message" : getStatus,
+        "service" : localStorage.getItem("service")
+        }
+      console.log(dataNumber)
+      listOrder.value = (dataNumber)
+  } catch (error) {
+    error.value = error;
+  }finally{
+    loading.value = false; 
+  }
+}
 
+const buyNumber = async () =>{
   try {
-    const response = await fetch(
-      `/api/stubs/handler_api.php?api_key=${apiKey}&action=getBalance`,
+    const apiKey = localStorage.getItem("api_key");
+    const services = localStorage.getItem("service");
+    const providers = localStorage.getItem("provider");
+    const countrys = localStorage.getItem("country");
+
+      if (!apiKey) {
+        router.push("/");
+        throw new Error("No API key found");
+      }
+    const buy = await fetch(
+      `/api/stubs/handler_api.php?api_key=${apiKey}&action=getNumber&service=${services}&operator=${providers}&country=${countrys}`,
       {
         method: "GET",
       }
     ).then((res) => res.text());
-
-    if (response.includes("ACCESS_BALANCE")) {
-      data.value = response;
-    } else {
-      router.push("/");
+    if(buy.includes('ACCESS_NUMBER')){
+      const dataBuy = {
+        'id':buy.split(":")[1],
+        'number':buy.split(":")[2],
+      }
+      dataOrder.value = dataBuy
+      console.log(dataOrder)
+     
+    }else{
+      error.value = buy
     }
-  } catch (err) {
-    error.value = err.message;
-  } finally {
+  }catch(error){
+    error.value = error.message;
+  }finally{
     loading.value = false;
+    validateOrder.value = false
   }
+}
+onMounted( () => {
+  balance();
+ buyNumber();
+  statusId();
 });
 </script>
