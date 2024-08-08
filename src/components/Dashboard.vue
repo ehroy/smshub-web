@@ -224,7 +224,7 @@ const statusId = async () => {
   } catch (error) {
     error.value = error;
   }finally{
-    loading.value = false; 
+    loading.value = true; 
   }
 }
 
@@ -258,9 +258,6 @@ const buyNumber = async () =>{
     }
   }catch(error){
     error.value = error.message;
-  }finally{
-    loading.value = false;
-    validateOrder.value = false
   }
 }
 onMounted( () => {
