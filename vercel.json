@@ -1,8 +1,8 @@
 {
   "builds": [
     {
-      "src": "api/**/*",
-      "use": "@vercel/node"
+      "src": "dist/index.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
